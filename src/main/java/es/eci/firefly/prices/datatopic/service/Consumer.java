@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.eci.firefly.prices.datatopic.model.Price;
 import es.eci.firefly.prices.datatopic.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,12 @@ public class Consumer {
 
     private static final String TOPIC = "prices";
     private final ObjectMapper objectMapper;
+    private final Producer producer;
 
-    Consumer() {
+
+    @Autowired
+    Consumer(Producer producer) {
+        this.producer = producer;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -30,5 +35,8 @@ public class Consumer {
         priceLeido.setPriceUpdateDate(DateUtils.asDate(LocalDateTime.now()));
 
         log.info(String.format("$$ -> Consumed & Transformed Message Price -> %s", priceLeido));
+
+        this.producer.sendMessage(objectMapper.writeValueAsString(priceLeido));
+
     }
 }
